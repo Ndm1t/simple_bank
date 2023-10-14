@@ -26,7 +26,9 @@ OFFSET $2;
 
 -- name: UpdateAccount :one
 UPDATE accounts
-SET balance = sqlc.arg(balance)
+SET owner = sqlc.arg(owner),
+    balance = sqlc.arg(balance),
+    currency = sqlc.arg(currency)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

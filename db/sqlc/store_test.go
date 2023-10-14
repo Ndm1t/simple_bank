@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -12,11 +11,10 @@ func TestTransferTx(t *testing.T) {
 
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t)
-	fmt.Println(">>before:", account1.Balance, account2.Balance)
 
 	//run concurrent transfer transactions
 	n := 5
-	amount := int64(10)
+	amount := float64(10)
 
 	errs := make(chan error)
 	results := make(chan TransferTxResult)
@@ -82,12 +80,11 @@ func TestTransferTx(t *testing.T) {
 		require.NotEmpty(t, toAccount)
 		require.Equal(t, account2.ID, toAccount.ID)
 
-		fmt.Println(">>tx:", fromAccount.Balance, toAccount.Balance)
 		diff1 := account1.Balance - fromAccount.Balance
 		diff2 := toAccount.Balance - account2.Balance
 		require.Equal(t, diff1, diff2)
 		require.True(t, diff1 > 0)
-		require.True(t, diff1%2 == 0)
+		require.True(t, int64(diff1)%2 == 0)
 
 		k := int(diff1 / amount)
 		require.True(t, k >= 1 && k <= n)
@@ -100,9 +97,8 @@ func TestTransferTx(t *testing.T) {
 	updatedAccount2, err := testQueries.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
 
-	fmt.Println(">>after:", updatedAccount1.Balance, updatedAccount2.Balance)
-	require.Equal(t, account1.Balance-int64(n)*amount, updatedAccount1.Balance)
-	require.Equal(t, account2.Balance+int64(n)*amount, updatedAccount2.Balance)
+	require.Equal(t, account1.Balance-float64(n)*amount, updatedAccount1.Balance)
+	require.Equal(t, account2.Balance+float64(n)*amount, updatedAccount2.Balance)
 
 }
 
@@ -111,11 +107,10 @@ func TestTransferTxDeadlock(t *testing.T) {
 
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t)
-	fmt.Println(">>before:", account1.Balance, account2.Balance)
 
 	//run concurrent transfer transactions
 	n := 10
-	amount := int64(10)
+	amount := float64(10)
 
 	errs := make(chan error)
 
@@ -150,7 +145,6 @@ func TestTransferTxDeadlock(t *testing.T) {
 	updatedAccount2, err := testQueries.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
 
-	fmt.Println(">>after:", updatedAccount1.Balance, updatedAccount2.Balance)
 	require.Equal(t, account1.Balance, updatedAccount1.Balance)
 	require.Equal(t, account2.Balance, updatedAccount2.Balance)
 }
