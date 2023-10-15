@@ -14,4 +14,7 @@ test:
 	go test -v -cover ./...
 server:
 	go run main.go
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server
+debug:
+	go build -gcflags="all=-N -l" -o myApp
+	./myApp
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server debug
