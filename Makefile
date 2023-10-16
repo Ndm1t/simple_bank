@@ -17,4 +17,6 @@ server:
 debug:
 	go build -gcflags="all=-N -l" -o myApp
 	./myApp
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server debug
+mock:
+	mockgen -package mockdb -destination db/mock/store.go bankingApp/db/sqlc Store
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc test server debug mock
