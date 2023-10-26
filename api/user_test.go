@@ -180,7 +180,7 @@ package api
 //			store := mockdb.NewMockStore(ctrl)
 //			tc.buildStubs(store)
 //
-//			server := NewServer(store)
+//			server := newTestServer(t, store)
 //			recorder := httptest.NewRecorder()
 //
 //			// Marshal body data to JSON
@@ -217,7 +217,6 @@ package api
 //					GetUser(gomock.Any(), gomock.Eq(user.Username)).
 //					Times(1).
 //					Return(user, nil)
-//				store.EXPECT()
 //			},
 //			checkResponse: func(recorder *httptest.ResponseRecorder) {
 //				require.Equal(t, http.StatusOK, recorder.Code)
@@ -298,7 +297,7 @@ package api
 //			store := mockdb.NewMockStore(ctrl)
 //			tc.buildStubs(store)
 //
-//			server := NewServer(store)
+//			server := newTestServer(t, store)
 //			recorder := httptest.NewRecorder()
 //
 //			// Marshal body data to JSON

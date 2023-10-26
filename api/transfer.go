@@ -2,7 +2,9 @@ package api
 
 import (
 	db "bankingApp/db/sqlc"
+	"bankingApp/token"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -22,11 +24,20 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !server.validAccount(ctx, req.AccountFromId, req.Currency) {
+	account, ok := server.validAccount(ctx, req.AccountFromId, req.Currency)
+	if !ok {
 		return
 	}
 
-	if !server.validAccount(ctx, req.AccountToId, req.Currency) {
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	if authPayload.Username != account.Owner {
+		err := errors.New("It is forbidden to transfer money from account that does not belong to the authorized user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	if _, ok = server.validAccount(ctx, req.AccountToId, req.Currency); !ok {
 		return
 	}
 
@@ -44,7 +55,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, transferResult)
 }
 
-func (server *Server) validAccount(ctx *gin.Context, accountId int64, currency string) bool {
+func (server *Server) validAccount(ctx *gin.Context, accountId int64, currency string) (db.Account, bool) {
 	account, err := server.store.GetAccount(ctx, accountId)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -52,15 +63,15 @@ func (server *Server) validAccount(ctx *gin.Context, accountId int64, currency s
 				"message": "There is no account with given id",
 				"data":    accountId,
 			})
-			return false
+			return db.Account{}, false
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return false
+		return db.Account{}, false
 	}
 	if account.Currency != currency {
 		err = fmt.Errorf("account [%d] currency mismatch: %v vs %v", accountId, account.Currency, currency)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return false
+		return db.Account{}, false
 	}
-	return true
+	return account, true
 }
